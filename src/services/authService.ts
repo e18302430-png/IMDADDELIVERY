@@ -1,13 +1,26 @@
-
 import { supabase } from './supabaseClient';
-import { AppUser, LoginResponse } from '../types/models';
+import { Staff, UserRole } from '../../types'; 
+
+export interface AppUser {
+    id: number;
+    name: string;
+    phone: string;
+    kind: 'staff' | 'delegate';
+    roleOrType: string;
+    role?: UserRole;
+    password?: string;
+    requiresPasswordChange?: boolean;
+    imageUrl?: string;
+}
+
+export interface LoginResponse {
+    user: AppUser | null;
+    error: string | null;
+}
 
 const USER_STORAGE_KEY = 'imdad_user';
 
 export const authService = {
-  /**
-   * تسجيل الدخول عبر البحث في الجداول المخصصة
-   */
   async loginUser(
     userType: 'staff' | 'delegate',
     phone: string,
@@ -16,43 +29,42 @@ export const authService = {
     try {
       const tableName = userType === 'staff' ? 'staff' : 'delegates';
 
-      // البحث عن المستخدم بمطابقة الهاتف وكلمة المرور
       const { data, error } = await supabase
         .from(tableName)
         .select('*')
         .eq('phone', phone)
         .eq('password', pass)
-        .single();
+        .maybeSingle();
 
-      if (error || !data) {
-        return { user: null, error: 'بيانات الدخول غير صحيحة، تأكد من رقم الجوال وكلمة المرور.' };
+      if (error) {
+        console.error('Supabase Error:', error.message);
+        return { user: null, error: 'خطأ في الاتصال بقاعدة البيانات' };
       }
 
-      // تجهيز كائن المستخدم للتخزين
+      if (!data) {
+        return { user: null, error: 'بيانات الدخول غير صحيحة' };
+      }
+
       const appUser: AppUser = {
         id: data.id,
         name: data.name,
         phone: data.phone,
         kind: userType,
         roleOrType: userType === 'staff' ? data.role : data.type,
-        role: userType === 'staff' ? data.role : undefined,
+        role: userType === 'staff' ? (data.role as UserRole) : undefined,
+        imageUrl: data.imageUrl,
         password: data.password,
-        requiresPasswordChange: data.requiresPasswordChange,
+        requiresPasswordChange: data.requiresPasswordChange
       };
 
-      // الحفظ في localStorage
       localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(appUser));
-
       return { user: appUser, error: null };
     } catch (err) {
-      console.error('Login Error:', err);
-      return { user: null, error: 'حدث خطأ غير متوقع أثناء تسجيل الدخول.' };
+      console.error('Login Exception:', err);
+      return { user: null, error: 'حدث خطأ غير متوقع' };
     }
   },
 
-  /**
-   * جلب المستخدم الحالي من الذاكرة المحلية
-   */
   getCurrentUser(): AppUser | null {
     const stored = localStorage.getItem(USER_STORAGE_KEY);
     if (!stored) return null;
@@ -63,16 +75,10 @@ export const authService = {
     }
   },
 
-  /**
-   * التحقق هل المستخدم مسجل دخول أم لا
-   */
   isAuthenticated(): boolean {
     return !!localStorage.getItem(USER_STORAGE_KEY);
   },
 
-  /**
-   * تسجيل الخروج
-   */
   logout(): void {
     localStorage.removeItem(USER_STORAGE_KEY);
   }
