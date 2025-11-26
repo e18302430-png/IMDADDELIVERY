@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { AppRouter } from './src/router';
+import { HashRouter } from 'react-router-dom';
+import { AppRoutes } from './src/router';
 import { AppProvider } from './contexts/AppContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { useTranslation } from './hooks/useTranslation';
@@ -144,7 +145,7 @@ const InnerApp: React.FC = () => {
                        />
                    )}
                    <main className="flex-1 overflow-y-auto p-2 sm:p-6 custom-scrollbar scroll-smooth">
-                       <AppRouter />
+                       <AppRoutes />
                    </main>
                    {currentUser && (
                        <footer className="p-4 text-center text-gray-500 text-xs border-t border-gray-800/50">
@@ -159,9 +160,11 @@ const InnerApp: React.FC = () => {
 
 const App: React.FC = () => {
     return (
-        <LanguageProvider>
-            <InnerApp />
-        </LanguageProvider>
+        <HashRouter>
+            <LanguageProvider>
+                <InnerApp />
+            </LanguageProvider>
+        </HashRouter>
     );
 };
 
