@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { AppRouter } from './src/router';
 import { AppProvider } from './contexts/AppContext';
@@ -57,6 +58,7 @@ const InnerApp: React.FC = () => {
                 if (delegates.length > 0 || staff.length > 0) {
                     setData(prev => ({
                         ...prev,
+                        // If DB has data, use it. Otherwise keep local/initial.
                         // Cast to any[] to suppress strict type mismatch between local types and Supabase types
                         delegates: delegates.length > 0 ? (delegates as any[]) : prev.delegates,
                         staff: staff.length > 0 ? (staff as any[]) : prev.staff,
