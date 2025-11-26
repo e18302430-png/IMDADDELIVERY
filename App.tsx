@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { AppRouter } from './src/router';
 import { AppProvider } from './contexts/AppContext';
@@ -21,14 +20,12 @@ const InnerApp: React.FC = () => {
             const savedState = localStorage.getItem(APP_STATE_KEY);
             return savedState ? JSON.parse(savedState) : initialData;
         } catch (error) {
-            console.error("Failed to load state from localStorage:", error);
             return initialData;
         }
     });
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const { t, language } = useTranslation();
 
-    // 1. Sync Auth State from Supabase Service
     useEffect(() => {
         const authUser = authService.getCurrentUser();
         if (authUser && authUser.kind === 'staff') {
@@ -39,27 +36,22 @@ const InnerApp: React.FC = () => {
                 role: authUser.role || UserRole.OpsSupervisor,
                 password: authUser.password || '',
                 requiresPasswordChange: authUser.requiresPasswordChange,
-                nationalId: '0000000000', 
-                idExpiryDate: '2030-01-01',
+                nationalId: '0000000000',
+                idExpiryDate: '2030-01-01'
             };
             setCurrentUser(staffUser);
         }
     }, []);
 
-    // 2. Sync Data from Supabase (Delegates & Staff)
     useEffect(() => {
         const syncData = async () => {
             try {
-                // Load Delegates
                 const delegates = await delegatesService.loadDelegates();
-                // Load Staff
                 const staff = await staffService.loadStaff();
                 
                 if (delegates.length > 0 || staff.length > 0) {
                     setData(prev => ({
                         ...prev,
-                        // If DB has data, use it. Otherwise keep local/initial.
-                        // Cast to any[] to suppress strict type mismatch between local types and Supabase types
                         delegates: delegates.length > 0 ? (delegates as any[]) : prev.delegates,
                         staff: staff.length > 0 ? (staff as any[]) : prev.staff,
                     }));
@@ -68,62 +60,8 @@ const InnerApp: React.FC = () => {
                 console.error("Failed to sync with Supabase:", error);
             }
         };
-        // Run sync on mount
         syncData();
     }, []);
-
-    // 3. Persist Data to LocalStorage (Backup)
-    useEffect(() => {
-        try {
-            localStorage.setItem(APP_STATE_KEY, JSON.stringify(data));
-        } catch (error) {
-            console.error("Failed to save state to localStorage:", error);
-        }
-    }, [data]);
-
-    // 4. Check for Request Timeout
-    useEffect(() => {
-        const checkTimeouts = () => {
-            const now = Date.now();
-            let hasUpdates = false;
-            const updatedRequests = data.requests.map(req => {
-                if (req.status === 'PendingApproval') {
-                    const createdAt = new Date(req.createdAt).getTime();
-                    const hoursDiff = (now - createdAt) / (1000 * 60 * 60);
-                    if (hoursDiff > 72) {
-                        hasUpdates = true;
-                        return {
-                            ...req,
-                            status: RequestStatus.Cancelled,
-                            history: [...req.history, {
-                                actor: 'System' as const,
-                                actorName: t('system'),
-                                action: 'Cancelled' as const,
-                                timestamp: new Date().toISOString(),
-                                comment: t('request_timeout_msg')
-                            }]
-                        };
-                    }
-                }
-                return req;
-            });
-
-            if (hasUpdates) {
-                setData(prev => ({ ...prev, requests: updatedRequests }));
-            }
-        };
-
-        checkTimeouts(); 
-        const interval = setInterval(checkTimeouts, 60000 * 60);
-        return () => clearInterval(interval);
-    }, [data.requests, t]);
-
-    // 5. RTL/LTR Handling
-    useEffect(() => {
-        const isRtl = ['ar', 'ur'].includes(language);
-        document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
-        document.documentElement.lang = language;
-    }, [language]);
 
     const value = useMemo(() => ({
         currentUser,
@@ -139,29 +77,17 @@ const InnerApp: React.FC = () => {
                    <>
                        <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
                        {isSidebarOpen && (
-                           <div 
-                               className="fixed inset-0 bg-black/50 z-30 md:hidden backdrop-blur-sm"
-                               onClick={() => setIsSidebarOpen(false)}
-                           />
+                           <div className="fixed inset-0 bg-black/50 z-30 md:hidden backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)} />
                        )}
                    </>
                )}
-               
                <div className={`flex-1 flex flex-col transition-all duration-300 ${currentUser ? 'md:ltr:ml-64 md:rtl:mr-64' : ''} h-screen overflow-hidden`}>
                    {currentUser && (
-                       <Header 
-                           toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} 
-                           handleChangePassword={() => {}}
-                       />
+                       <Header toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} handleChangePassword={() => {}} />
                    )}
                    <main className="flex-1 overflow-y-auto p-2 sm:p-6 custom-scrollbar scroll-smooth">
                        <AppRouter />
                    </main>
-                   {currentUser && (
-                       <footer className="p-4 text-center text-gray-500 text-xs border-t border-gray-800/50">
-                           &copy; {new Date().getFullYear()} {t('appTitle')} - v1.0.0
-                       </footer>
-                   )}
                </div>
             </div>
         </AppProvider>
