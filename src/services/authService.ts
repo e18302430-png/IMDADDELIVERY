@@ -1,6 +1,7 @@
 import { supabase } from './supabaseClient';
 import { Staff, UserRole } from '../../types'; 
 
+// تعريف واجهة المستخدم للتطبيق
 export interface AppUser {
     id: number;
     name: string;
