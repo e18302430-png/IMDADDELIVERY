@@ -1,0 +1,206 @@
+
+<!DOCTYPE html>
+<html lang="ar">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="description" content="منصة إمداد التطور للخدمات اللوجستية - نظام متكامل لإدارة المناديب، العمليات التشغيلية، والموارد البشرية مدعوم بالذكاء الاصطناعي." />
+    <title>IMDAD-X | منصة إمداد اللوجستية</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha528-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+      :root {
+        --bg-primary: #111827; /* gray-900 */
+        --bg-secondary: #1F2937; /* gray-800 */
+        --primary-color: #F97316; /* orange-500 */
+        --primary-hover: #FB923C; /* orange-400 */
+        --secondary-color: #3B82F6; /* blue-500 */
+        --text-primary: #F3F4F6; /* gray-100 */
+        --text-secondary: #9CA3AF; /* gray-400 */
+        --border-color: rgba(249, 115, 22, 0.2);
+      }
+      html {
+        -webkit-text-size-adjust: 100%; /* Prevent font scaling in landscape */
+      }
+      body {
+        font-family: 'Cairo', sans-serif;
+        background-color: var(--bg-primary);
+        background-image: 
+          linear-gradient(rgba(249, 115, 22, 0.05) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(249, 115, 22, 0.05) 1px, transparent 1px);
+        background-size: 30px 30px;
+        color: var(--text-primary);
+        overflow-x: hidden;
+        -webkit-font-smoothing: antialiased;
+      }
+      /* Disable auto-zoom on inputs for iOS */
+      input, select, textarea {
+        font-size: 16px;
+      }
+      
+      html[dir="ltr"] .group:hover .group-hover\:rtl\:block {
+        display: none !important;
+      }
+      html[dir="rtl"] .group:hover .group-hover\:ltr\:block {
+        display: none !important;
+      }
+      .glass-card {
+        background: linear-gradient(135deg, rgba(31, 41, 55, 0.6), rgba(17, 24, 39, 0.5));
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid var(--border-color);
+        border-radius: 1rem;
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+      }
+      .primary-title {
+        font-weight: 700;
+        letter-spacing: 1px;
+        color: var(--primary-color);
+        text-shadow: 0 0 10px rgba(249, 115, 22, 0.3);
+      }
+      .btn-primary {
+        background-color: var(--primary-color);
+        color: white;
+        font-weight: 600;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 10px rgba(249, 115, 22, 0.2);
+        touch-action: manipulation;
+      }
+      .btn-primary:hover {
+        background-color: var(--primary-hover);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(249, 115, 22, 0.3);
+      }
+       .btn-primary:disabled {
+        background-color: #4B5563; /* gray-600 */
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+      .btn-secondary {
+        background-color: transparent;
+        border: 1px solid var(--primary-color);
+        color: var(--primary-color);
+        font-weight: 600;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        transition: all 0.3s ease;
+        touch-action: manipulation;
+      }
+      .btn-secondary:hover {
+        background-color: rgba(249, 115, 22, 0.1);
+        color: var(--primary-hover);
+      }
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: var(--bg-secondary);
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--primary-color);
+        border-radius: 4px;
+        border: 2px solid var(--bg-secondary);
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--primary-hover);
+      }
+      .input-styled {
+        background-color: rgba(17, 24, 39, 0.8);
+        border: 1px solid #374151; /* gray-700 */
+        color: var(--text-primary);
+        border-radius: 0.5rem;
+        padding: 0.75rem;
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+      }
+      .input-styled:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.3);
+      }
+
+      /* 3D Flip Card */
+      .flip-card {
+        background-color: transparent;
+        width: 100%;
+        height: 160px;
+        perspective: 1000px;
+      }
+      .flip-card-inner {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        text-align: center;
+        transition: transform 0.8s;
+        transform-style: preserve-3d;
+      }
+      .flip-card:hover .flip-card-inner {
+        transform: rotateY(180deg);
+      }
+      .flip-card-front, .flip-card-back {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        border-radius: 1rem;
+      }
+      .flip-card-front {
+        background: linear-gradient(135deg, rgba(31, 41, 55, 0.7), rgba(17, 24, 39, 0.6));
+        border: 1px solid var(--border-color);
+      }
+      .flip-card-back {
+        background: linear-gradient(135deg, rgba(249, 115, 22, 0.1), rgba(249, 115, 22, 0.2));
+        color: white;
+        transform: rotateY(180deg);
+        border: 1px solid var(--border-color);
+      }
+
+      /* Animation for fade-in effect */
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .animate-fade-in {
+        animation: fadeIn 0.5s ease-in-out forwards;
+      }
+      
+      @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+        20%, 40%, 60%, 80% { transform: translateX(5px); }
+      }
+      .animate-shake {
+        animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.28.0",
+    "react-router-dom": "https://aistudiocdn.com/react-router-dom@^7.9.5",
+    "@supabase/supabase-js": "https://aistudiocdn.com/@supabase/supabase-js@^2.84.0"
+  }
+}
+</script>
+</head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>

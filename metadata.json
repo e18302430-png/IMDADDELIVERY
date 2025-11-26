@@ -1,0 +1,8 @@
+{
+  "name": "Copy of Copy of Imdad Al-Tatawor Logistics Platform800000000000",
+  "description": "The official enterprise resource planning and logistics management platform for Imdad Al-Tatawor. Features AI-powered analytics, real-time delegate tracking, compliance monitoring, and comprehensive HR & operational tools.",
+  "requestFramePermissions": [
+    "geolocation",
+    "camera"
+  ]
+}
