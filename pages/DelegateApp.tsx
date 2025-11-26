@@ -1,3 +1,4 @@
+
 import React, { useState, useContext, useEffect, useRef, useCallback, useMemo } from 'react';
 import { AppContext } from '../contexts/AppContext';
 import { Delegate, Request, RequestStatus, RequestType, UserRole, RequestHistoryEvent, DelegateRequestTopic, Circular, Notification } from '../types';
@@ -1075,14 +1076,14 @@ const DirectivesView: React.FC<{ delegate: Delegate, showNotification: Function 
                          ...r,
                          status: RequestStatus.Completed,
                          directiveResponse: {
-                             type: 'Replied', // Unified action
+                             type: 'Replied' as const,
                              comment: comment,
                              imageUrl: imageUrl
                          },
                          history: [...r.history, {
-                             actor: 'Delegate',
+                             actor: 'Delegate' as const,
                              actorName: delegate.name,
-                             action: 'DirectiveReplied',
+                             action: 'DirectiveReplied' as const,
                              timestamp: new Date().toISOString(),
                              comment: comment
                          }]

@@ -1,21 +1,22 @@
 
-
-
 import React, { useState, useContext, useMemo } from 'react';
 import { AppContext } from '../contexts/AppContext';
 import { Staff, UserRole } from '../types';
-import { Navigate, Link } from 'react-router-dom';
+import { Navigate, Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from '../hooks/useTranslation';
 import LanguageSwitcher from '../components/LanguageSwitcher';
+import { authService } from '../src/services/authService'; // IMPORT FROM SRC SERVICES
 
 const Login: React.FC = () => {
     const { data, setData, setCurrentUser, currentUser } = useContext(AppContext);
     const { t } = useTranslation();
+    const navigate = useNavigate();
     const [selectedRole, setSelectedRole] = useState<UserRole | ''>('');
     const [selectedSupervisorId, setSelectedSupervisorId] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
     
     // Password Change State
     const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
@@ -36,37 +37,76 @@ const Login: React.FC = () => {
     }, [data.staff]);
 
 
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
+        setLoading(true);
 
         if (!selectedRole) {
             setError(t('error_selectRole'));
+            setLoading(false);
             return;
         }
 
-        let user;
+        let phoneToAuth = '';
+        // 1. Determine Phone Number based on selection
         if (selectedRole === UserRole.OpsSupervisor) {
              if (!selectedSupervisorId) {
                 setError(t('selectSupervisor', 'Please select a supervisor.'));
+                setLoading(false);
                 return;
             }
-            user = data.staff.find(staff => staff.id === parseInt(selectedSupervisorId, 10));
+            const sup = data.staff.find(s => s.id === parseInt(selectedSupervisorId));
+            if (sup) phoneToAuth = sup.phone;
         } else {
-            user = data.staff.find(staff => staff.role === selectedRole);
+            const staff = data.staff.find(s => s.role === selectedRole);
+            if (staff) phoneToAuth = staff.phone;
         }
 
+        if (!phoneToAuth) {
+             // Fallback if local data isn't loaded yet or empty
+             phoneToAuth = '0510000001'; // Default GM phone for bootstrapping
+        }
 
-        if (user && user.password === password) {
-            if (user.requiresPasswordChange) {
-                setPendingUser(user);
-                setShowChangePasswordModal(true);
+        // 2. Call Supabase Auth Service
+        const { user, error: authError } = await authService.loginUser('staff', phoneToAuth, password);
+
+        if (authError || !user) {
+            // Optional: Fallback to Local Data Check (for offline dev)
+            const localUser = data.staff.find(s => s.phone === phoneToAuth && s.password === password);
+            if (localUser) {
+                if (localUser.requiresPasswordChange) {
+                    setPendingUser(localUser);
+                    setShowChangePasswordModal(true);
+                } else {
+                    setCurrentUser(localUser);
+                    navigate('/dashboard');
+                }
             } else {
-                setCurrentUser(user);
+                setError(authError || t('error_incorrectPassword'));
             }
         } else {
-            setError(t('error_incorrectPassword'));
+            // 3. Map AppUser (from Supabase) to Staff (Context Type)
+            const mappedUser: Staff = {
+                id: user.id,
+                name: user.name,
+                phone: user.phone,
+                role: user.role || UserRole.OpsSupervisor,
+                password: user.password || '',
+                requiresPasswordChange: user.requiresPasswordChange,
+                nationalId: '0000000000', 
+                idExpiryDate: '2030-01-01',
+            };
+
+            if (mappedUser.requiresPasswordChange) {
+                setPendingUser(mappedUser);
+                setShowChangePasswordModal(true);
+            } else {
+                setCurrentUser(mappedUser);
+                navigate('/dashboard');
+            }
         }
+        setLoading(false);
     };
     
     const handleChangePasswordSubmit = (e: React.FormEvent) => {
@@ -79,7 +119,7 @@ const Login: React.FC = () => {
         }
         
         if (pendingUser) {
-            // Update user in data
+            // Update user in context data
              setData(prevData => ({
                 ...prevData,
                 staff: prevData.staff.map(s => 
@@ -93,6 +133,7 @@ const Login: React.FC = () => {
             setCurrentUser({ ...pendingUser, password: newPassword, requiresPasswordChange: false });
             setShowChangePasswordModal(false);
             setPendingUser(null);
+            navigate('/dashboard');
         }
     };
 
@@ -220,8 +261,8 @@ const Login: React.FC = () => {
                         {error && <p className="text-sm text-red-400 text-center">{error}</p>}
 
                         <div>
-                            <button type="submit" className="w-full btn-primary">
-                                {t('login')}
+                            <button type="submit" disabled={loading} className="w-full btn-primary">
+                                {loading ? '...' : t('login')}
                             </button>
                         </div>
                     </form>

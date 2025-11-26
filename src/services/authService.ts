@@ -35,6 +35,9 @@ export const authService = {
         phone: data.phone,
         kind: userType,
         roleOrType: userType === 'staff' ? data.role : data.type,
+        role: userType === 'staff' ? data.role : undefined,
+        password: data.password,
+        requiresPasswordChange: data.requiresPasswordChange,
       };
 
       // الحفظ في localStorage
