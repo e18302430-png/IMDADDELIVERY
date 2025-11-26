@@ -28,6 +28,7 @@ const InnerApp: React.FC = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const { t, language } = useTranslation();
 
+    // 1. Sync Auth State
     useEffect(() => {
         const authUser = authService.getCurrentUser();
         if (authUser && authUser.kind === 'staff') {
@@ -45,6 +46,7 @@ const InnerApp: React.FC = () => {
         }
     }, []);
 
+    // 2. Sync Data from Supabase
     useEffect(() => {
         const syncData = async () => {
             try {
@@ -65,6 +67,7 @@ const InnerApp: React.FC = () => {
         syncData();
     }, []);
 
+    // 3. Persist Data
     useEffect(() => {
         try {
             localStorage.setItem(APP_STATE_KEY, JSON.stringify(data));
@@ -73,42 +76,7 @@ const InnerApp: React.FC = () => {
         }
     }, [data]);
 
-    useEffect(() => {
-        const checkTimeouts = () => {
-            const now = Date.now();
-            let hasUpdates = false;
-            const updatedRequests = data.requests.map(req => {
-                if (req.status === 'PendingApproval') {
-                    const createdAt = new Date(req.createdAt).getTime();
-                    const hoursDiff = (now - createdAt) / (1000 * 60 * 60);
-                    if (hoursDiff > 72) {
-                        hasUpdates = true;
-                        return {
-                            ...req,
-                            status: RequestStatus.Cancelled,
-                            history: [...req.history, {
-                                actor: 'System' as const,
-                                actorName: t('system'),
-                                action: 'Cancelled' as const,
-                                timestamp: new Date().toISOString(),
-                                comment: t('request_timeout_msg')
-                            }]
-                        };
-                    }
-                }
-                return req;
-            });
-
-            if (hasUpdates) {
-                setData(prev => ({ ...prev, requests: updatedRequests }));
-            }
-        };
-
-        checkTimeouts(); 
-        const interval = setInterval(checkTimeouts, 60000 * 60);
-        return () => clearInterval(interval);
-    }, [data.requests, t]);
-
+    // 4. RTL Handling
     useEffect(() => {
         const isRtl = ['ar', 'ur'].includes(language);
         document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
