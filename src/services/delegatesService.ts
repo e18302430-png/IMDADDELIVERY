@@ -1,11 +1,7 @@
-
 import { supabase } from './supabaseClient';
-import { Delegate } from '../types/models';
+import { Delegate } from '../../types';
 
 export const delegatesService = {
-  /**
-   * جلب جميع المناديب
-   */
   async loadDelegates(): Promise<Delegate[]> {
     const { data, error } = await supabase
       .from('delegates')
@@ -16,12 +12,9 @@ export const delegatesService = {
       console.error('Error loading delegates:', error);
       return [];
     }
-    return data as Delegate[];
+    return data as unknown as Delegate[];
   },
 
-  /**
-   * جلب مندوب واحد (لصفحة المندوب مثلاً)
-   */
   async getDelegateById(id: number): Promise<Delegate | null> {
     const { data, error } = await supabase
       .from('delegates')
@@ -30,16 +23,27 @@ export const delegatesService = {
       .single();
 
     if (error) return null;
-    return data as Delegate;
+    return data as unknown as Delegate;
   },
 
-  /**
-   * إضافة مندوب جديد
-   */
-  async addDelegate(payload: Omit<Delegate, 'id'>): Promise<{ success: boolean; error?: string }> {
+  async addDelegate(payload: any): Promise<{ success: boolean; data?: Delegate; error?: string }> {
+    const { data, error } = await supabase
+      .from('delegates')
+      .insert([payload])
+      .select()
+      .single();
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+    return { success: true, data: data as unknown as Delegate };
+  },
+
+  async updateDelegate(id: number, payload: any): Promise<{ success: boolean; error?: string }> {
     const { error } = await supabase
       .from('delegates')
-      .insert([payload]);
+      .update(payload)
+      .eq('id', id);
 
     if (error) {
       return { success: false, error: error.message };
@@ -47,15 +51,15 @@ export const delegatesService = {
     return { success: true };
   },
 
-  /**
-   * تحديث بيانات مندوب
-   */
-  async updateDelegate(id: number, payload: Partial<Delegate>): Promise<boolean> {
+  async deleteDelegate(id: number): Promise<{ success: boolean; error?: string }> {
     const { error } = await supabase
       .from('delegates')
-      .update(payload)
+      .delete()
       .eq('id', id);
 
-    return !error;
+    if (error) {
+      return { success: false, error: error.message };
+    }
+    return { success: true };
   }
 };
